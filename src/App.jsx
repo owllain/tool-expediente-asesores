@@ -20,7 +20,9 @@ import {
   LogOut,
   Printer,
   ChevronRight,
-  UserPlus
+  UserPlus,
+  Menu,
+  X
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import './index.css'
@@ -60,6 +62,7 @@ function AppContent() {
   const [activeView, setActiveView] = useState('dashboard')
   const [mesActual, setMesActual] = useState('mes1')
   const [semanaActual, setSemanaActual] = useState('semana1')
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const fileInputRef = useRef(null)
 
   const handlePrint = () => {
@@ -100,9 +103,25 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-mesh flex text-foreground font-sans selection:bg-primary/30">
+    <div className="min-h-screen bg-mesh flex text-foreground font-sans selection:bg-primary/30 relative">
+      {/* Overlay para móvil */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar Moderno */}
-      <aside className="w-64 bg-card border-r border-border hidden lg:flex flex-col sticky top-0 h-screen">
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:h-screen
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
         <div className="p-6">
           <div className="flex items-center gap-3 mb-8 px-2">
             <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
@@ -112,11 +131,19 @@ function AppContent() {
               <span className="font-bold text-lg leading-none tracking-tight">Expedientes</span>
               <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest mt-1">v1.2 Beta</span>
             </div>
+            {/* Botón Cerrar Móvil */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden ml-auto"
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
           </div>
 
-          <div className="mb-8 p-4 rounded-2xl bg-gradient-to-br from-primary to-primary-dark shadow-lg shadow-primary/20 border border-white/10 mx-2">
-            <p className="text-[10px] font-extrabold text-white/50 uppercase tracking-widest mb-1">Empresa</p>
-            <p className="text-xl font-black text-white tracking-widest">NETCOM</p>
+          <div className="mb-8 p-4 rounded-2xl bg-gradient-to-br from-primary to-primary-dark shadow-lg shadow-primary/20 border border-white/10 mx-2 text-center">
+            <p className="text-xl font-black text-white tracking-widest uppercase">Menú</p>
           </div>
 
           <nav className="space-y-6">
@@ -124,7 +151,10 @@ function AppContent() {
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-4 mb-2">Principal</p>
 
               <button
-                onClick={() => setActiveView('dashboard')}
+                onClick={() => {
+                  setActiveView('dashboard')
+                  setIsSidebarOpen(false)
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeView === 'dashboard' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-white hover:bg-white/5'}`}
               >
                 <LayoutDashboard className="h-5 w-5" />
@@ -132,7 +162,10 @@ function AppContent() {
               </button>
 
               <button
-                onClick={() => setActiveView('registro')}
+                onClick={() => {
+                  setActiveView('registro')
+                  setIsSidebarOpen(false)
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeView === 'registro' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-white hover:bg-white/5'}`}
               >
                 <UserPlus className="h-5 w-5" />
@@ -140,7 +173,10 @@ function AppContent() {
               </button>
 
               <button
-                onClick={() => setActiveView('evaluaciones')}
+                onClick={() => {
+                  setActiveView('evaluaciones')
+                  setIsSidebarOpen(false)
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeView === 'evaluaciones' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-white hover:bg-secondary'}`}
               >
                 <Calendar className="h-5 w-5" />
@@ -148,7 +184,10 @@ function AppContent() {
               </button>
 
               <button
-                onClick={() => setActiveView('firma')}
+                onClick={() => {
+                  setActiveView('firma')
+                  setIsSidebarOpen(false)
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeView === 'firma' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-white hover:bg-secondary'}`}
               >
                 <FileCheck className="h-5 w-5" />
@@ -205,8 +244,20 @@ function AppContent() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-grow flex flex-col min-w-0 h-screen overflow-y-scroll bg-mesh">
-        <section className="p-8 pt-12 max-w-7xl mx-auto w-full flex-grow flex flex-col min-h-[700px] interactive-view">
+      <main className="flex-grow flex flex-col min-w-0 h-screen overflow-y-scroll bg-mesh relative">
+        {/* Header Móvil */}
+        <header className="lg:hidden h-16 bg-card border-b border-border flex items-center px-6 sticky top-0 z-30 shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsSidebarOpen(true)}
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+          <span className="ml-4 font-bold tracking-tight">Expedientes</span>
+        </header>
+
+        <section className="p-8 pt-6 lg:pt-12 max-w-7xl mx-auto w-full flex-grow flex flex-col min-h-[700px] interactive-view">
           <AnimatePresence mode="wait">
             {activeView === 'registro' && (
               <motion.div

@@ -15,9 +15,9 @@ const RegistroAsesor = () => {
 
     const fields = [
         { id: 'nombre', label: 'Nombre Completo del Asesor', icon: UserPlus, placeholder: 'Ej. Roberto Gómez' },
-        { id: 'cedula', label: 'Cédula / ID Personal', icon: IdCard, placeholder: 'Ej. 12345678' },
-        { id: 'campania', label: 'Campaña / Proyecto', icon: Briefcase, placeholder: 'Ej. Ventas Móvil' },
-        { id: 'supervisor', label: 'Supervisor Directo', icon: Users, placeholder: 'Ej. Martha Salas' },
+        { id: 'cedula', label: 'Cédula / ID Personal', icon: IdCard, placeholder: 'Ej. 12345678', type: 'number' },
+        { id: 'campania', label: 'Proyecto', icon: Briefcase, placeholder: 'Ej. Ventas Móvil' },
+        { id: 'supervisor', label: 'Supervisor', icon: Users, placeholder: 'Ej. Martha Salas' },
     ]
 
     return (
@@ -58,10 +58,20 @@ const RegistroAsesor = () => {
                                         {field.label}
                                     </label>
                                     <input
-                                        type="text"
+                                        type={field.type || "text"}
                                         value={datosAsesor?.[field.id] || ''}
-                                        onChange={(e) => handleChange(field.id, e.target.value)}
-                                        className="w-full px-4 py-3 rounded-xl border border-white/10 bg-black/20 text-white focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-white/20"
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (field.id === 'cedula') {
+                                                // Solo permitir números
+                                                if (/^\d*$/.test(val)) {
+                                                    handleChange(field.id, val);
+                                                }
+                                            } else {
+                                                handleChange(field.id, val);
+                                            }
+                                        }}
+                                        className="w-full px-4 py-3 rounded-xl border border-white/10 bg-black/20 text-white focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         placeholder={field.placeholder}
                                     />
                                 </div>

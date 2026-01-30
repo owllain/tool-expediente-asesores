@@ -18,10 +18,10 @@ const Dashboard = () => {
     const { datosAsesor } = evaluaciones
 
     const stats = [
-        { label: 'Promedio General', value: promedioGlobal, icon: TrendingUp, color: 'text-primary' },
-        { label: 'Cumplimiento', value: cumplimientoTotal, icon: CheckCircle, color: 'text-green-400' },
-        { label: 'Semanas Evaluadas', value: totalEvaluaciones, icon: Clock, color: 'text-blue-400' },
-        { label: 'Semanas Restantes', value: alertasPendientes, icon: AlertCircle, color: 'text-destructive' },
+        { label: 'Promedio General', value: promedioGlobal, icon: TrendingUp, color: 'text-primary', description: 'Promedio ponderado de las evaluaciones completadas hasta la fecha.' },
+        { label: 'Cumplimiento', value: cumplimientoTotal, icon: CheckCircle, color: 'text-green-400', description: 'Porcentaje total de avance del plan de acompañamiento.' },
+        { label: 'Semanas Evaluadas', value: totalEvaluaciones, icon: Clock, color: 'text-blue-400', description: 'Cantidad de formularios semanales que han sido registrados.' },
+        { label: 'Semanas Restantes', value: alertasPendientes, icon: AlertCircle, color: 'text-destructive', description: 'Semanas pendientes de evaluación dentro del plan de 3 meses.' },
     ]
 
     return (
@@ -55,7 +55,7 @@ const Dashboard = () => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1 }}
-                            className="dashboard-card"
+                            className="dashboard-card group relative cursor-help"
                         >
                             <div className="flex justify-between items-start mb-4">
                                 <div className="p-2 bg-white/5 rounded-lg">
@@ -64,6 +64,15 @@ const Dashboard = () => {
                             </div>
                             <div className="metric-value mb-1 text-3xl">{stat.value}</div>
                             <p className="metric-label">{stat.label}</p>
+
+                            {/* Tooltip Fancy */}
+                            <div className="absolute inset-x-0 -bottom-2 translate-y-full opacity-0 group-hover:opacity-100 group-hover:-bottom-4 transition-all duration-300 pointer-events-none z-30 px-2">
+                                <div className="bg-popover/95 backdrop-blur-md border border-primary/20 p-2.5 rounded-xl shadow-2xl">
+                                    <p className="text-[10px] leading-tight text-white/90 font-medium text-center italic">
+                                        {stat.description}
+                                    </p>
+                                </div>
+                            </div>
                         </motion.div>
                     )
                 })}
@@ -119,6 +128,7 @@ const Dashboard = () => {
                             })}
                         </div>
                     </div>
+
                 </div>
 
                 {/* Columna Derecha: Próximos Pasos y Estatus */}
@@ -135,6 +145,13 @@ const Dashboard = () => {
                                 <Target className="h-3 w-3 text-primary" />
                                 <span className="text-[9px] font-bold text-white/80 uppercase">Rumbo a Certificación</span>
                             </div>
+                        </div>
+
+                        {/* Tooltip Fancy para Estatus */}
+                        <div className="absolute inset-0 bg-primary/95 flex items-center justify-center p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 backdrop-blur-sm">
+                            <p className="text-xs font-bold text-white text-center leading-relaxed">
+                                Resumen dinámico del estado actual del proceso de evaluación del asesor.
+                            </p>
                         </div>
                     </div>
 
@@ -166,6 +183,39 @@ const Dashboard = () => {
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* Guía de Operación Corporativa (Full Width) */}
+            <div className="bg-card/30 border border-white/5 rounded-3xl p-8 backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-8">
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shadow-inner">
+                        <ShieldCheck className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-white uppercase tracking-widest">Guía de Operación</h3>
+                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">Protocolo para la gestión eficiente del expediente</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-6">
+                    {[
+                        { step: '01', text: 'Registre los datos del asesor en "Datos del Asesor".' },
+                        { step: '02', text: 'Lleve el seguimiento semanal en "Evaluaciones".' },
+                        { step: '03', text: 'Al concluir el plan de 3 meses, cierre y firme.' },
+                        { step: '04', text: 'Descargue el JSON; es su archivo de "salvado" oficial.' },
+                        { step: '05', text: 'Para continuar su progreso, importe el archivo JSON.' },
+                        { step: '06', text: 'Genere el PDF final para respaldo administrativo.' },
+                    ].map((item, idx) => (
+                        <div key={idx} className="flex gap-4 group items-center">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-primary/20 group-hover:border-primary/30 transition-all duration-300">
+                                <span className="text-primary font-black text-[10px]">{item.step}</span>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground leading-snug group-hover:text-white/90 transition-colors">
+                                {item.text}
+                            </p>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
