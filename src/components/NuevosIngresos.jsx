@@ -265,22 +265,34 @@ const NuevosIngresos = ({ mes, semana, titulo, descripcion }) => {
                         {renderFields()}
                         
                         {/* Módulo de Firma Semanal (Opcional) */}
-                        <div className="mt-10 p-6 bg-secondary/10 rounded-2xl border border-white/10 shadow-sm">
-                            <div className="flex items-center justify-between mb-4">
-                                <label className="text-sm font-bold text-white/90 flex items-center gap-2 tracking-wide uppercase">
-                                    <Pen className="h-4 w-4 text-primary" />
-                                    Firma Semanal <span className="text-[10px] text-muted-foreground">(Opcional)</span>
-                                </label>
-                                {data.firmaSemanal && (
-                                    <Button variant="ghost" size="sm" onClick={clearFirma} className="text-destructive hover:bg-destructive/10 h-8 px-3 rounded-lg">
-                                        Borrar Firma
-                                    </Button>
-                                )}
-                            </div>
-                            
-                            {data.firmaSemanal ? (
-                                <div className="flex justify-center p-6 bg-white rounded-xl border border-white/20 shadow-inner">
-                                    <img src={data.firmaSemanal} alt="Firma semanal" className="max-h-24 mix-blend-multiply" />
+                        <div className="mt-10 p-6 bg-secondary/20 rounded-2xl border border-primary/20 shadow-sm">
+                            <label className="text-sm font-bold text-white/90 flex items-center gap-2 tracking-wide uppercase mb-4">
+                                <Pen className="h-4 w-4 text-primary" />
+                                Firma del Supervisor <span className="text-[10px] text-muted-foreground">(En línea)</span>
+                            </label>
+
+                            {isLocked ? (
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+                                        <ShieldCheck className="h-5 w-5 text-green-400 shrink-0" />
+                                        <div className="flex-1">
+                                            <p className="text-xs font-bold text-green-400 uppercase tracking-widest">Semana Firmada por Supervisor</p>
+                                            <p className="text-[10px] text-muted-foreground mt-0.5">Esta semana está sellada digitalmente y sus datos están protegidos.</p>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                if(window.confirm('¿Romper el sello? La firma se eliminará y los campos quedarán editables nuevamente.'))
+                                                    clearFirma()
+                                            }}
+                                            className="flex items-center gap-1.5 text-[10px] font-bold text-amber-400 hover:text-amber-300 border border-amber-400/30 hover:border-amber-400/60 px-3 py-1.5 rounded-lg transition-all shrink-0"
+                                        >
+                                            <Unlock className="h-3 w-3" />
+                                            Romper Sello
+                                        </button>
+                                    </div>
+                                    <div className="flex justify-center p-6 bg-white rounded-xl border border-white/20 shadow-inner">
+                                        <img src={data.firmaSemanal} alt="Firma semanal" className="max-h-24 mix-blend-multiply" />
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
@@ -293,7 +305,10 @@ const NuevosIngresos = ({ mes, semana, titulo, descripcion }) => {
                                     </div>
                                     <div className="flex justify-end gap-3">
                                         <Button variant="outline" size="sm" onClick={() => sigCanvas.current?.clear()} className="rounded-lg">Limpiar</Button>
-                                        <Button size="sm" onClick={handleSaveFirma} className="rounded-lg shadow-primary/20 shadow-lg">Guardar Firma</Button>
+                                        <Button size="sm" onClick={handleSaveFirma} className="rounded-lg shadow-primary/20 shadow-lg gap-2">
+                                            <Lock className="h-3 w-3" />
+                                            Firmar y Sellar
+                                        </Button>
                                     </div>
                                 </div>
                             )}
@@ -304,7 +319,12 @@ const NuevosIngresos = ({ mes, semana, titulo, descripcion }) => {
                             <Button
                                 onClick={() => {
                                     setPrintConfig({ tipo: 'ingresos', mes, semana })
-                                    setTimeout(() => window.print(), 100)
+                                    const prevTitle = document.title
+                                    document.title = ''
+                                    setTimeout(() => {
+                                        window.print()
+                                        setTimeout(() => { document.title = prevTitle }, 1500)
+                                    }, 100)
                                 }}
                                 className="bg-primary/20 text-primary hover:bg-primary/30 hover:text-white rounded-xl px-6 py-6 h-auto flex items-center gap-3 shadow-none border border-primary/20"
                             >

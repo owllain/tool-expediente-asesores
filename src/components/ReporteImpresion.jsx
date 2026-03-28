@@ -1,268 +1,596 @@
 import React from 'react'
 import { useEvaluacion } from '../context/EvaluacionContext'
 import { QRCodeSVG } from 'qrcode.react'
+import logoImg from '../assets/image.png'
 
+// ─── Celda de tabla institucional ────────────────────────────────────────────
+const CampoTabla = ({ label, value, colSpan = 1 }) => (
+    <td
+        colSpan={colSpan}
+        style={{
+            border: '1px solid #000',
+            padding: '4px 8px',
+            verticalAlign: 'top',
+        }}
+    >
+        <span style={{
+            fontSize: '7px', fontWeight: '700', textTransform: 'uppercase',
+            color: '#555', display: 'block', letterSpacing: '0.05em',
+        }}>
+            {label}
+        </span>
+        <span style={{
+            fontSize: '11px', fontWeight: '600', display: 'block',
+            marginTop: '2px', color: '#111',
+        }}>
+            {value || '—'}
+        </span>
+    </td>
+)
+
+// ─── Encabezado de sección formal ────────────────────────────────────────────
+const SeccionTitulo = ({ titulo, subtitulo }) => (
+    <div style={{ marginBottom: '10px', marginTop: '18px', pageBreakInside: 'avoid' }}>
+        <div style={{
+            background: '#1a1a2e', color: '#fff',
+            padding: '5px 10px',
+        }}>
+            <span style={{
+                fontSize: '9px', fontWeight: '800',
+                textTransform: 'uppercase', letterSpacing: '0.1em',
+            }}>
+                {titulo}
+            </span>
+        </div>
+        {subtitulo && (
+            <div style={{
+                background: '#f0f0f0', borderLeft: '4px solid #1a1a2e',
+                padding: '3px 10px',
+            }}>
+                <span style={{ fontSize: '8px', color: '#555', fontStyle: 'italic' }}>{subtitulo}</span>
+            </div>
+        )}
+    </div>
+)
+
+// ─── Fila de detalle con línea punteada ──────────────────────────────────────
+const FilaDetalle = ({ label, value }) => {
+    if (!value) return null
+    return (
+        <div style={{
+            display: 'grid', gridTemplateColumns: '150px 1fr',
+            gap: '0 8px', marginBottom: '5px', alignItems: 'baseline',
+        }}>
+            <span style={{
+                fontSize: '8px', fontWeight: '700', textTransform: 'uppercase',
+                color: '#666', letterSpacing: '0.04em',
+            }}>
+                {label}
+            </span>
+            <span style={{
+                fontSize: '10px', color: '#111',
+                borderBottom: '1px dotted #bbb',
+                paddingBottom: '2px', lineHeight: '1.5',
+            }}>
+                {value}
+            </span>
+        </div>
+    )
+}
+
+// ─── Bloque de texto largo ────────────────────────────────────────────────────
+const BloqueTexto = ({ label, value, colorBorde = '#333' }) => {
+    if (!value) return null
+    return (
+        <div style={{ marginBottom: '9px' }}>
+            <p style={{
+                fontSize: '8px', fontWeight: '700', textTransform: 'uppercase',
+                color: '#555', letterSpacing: '0.05em', margin: '0 0 3px 0',
+                borderLeft: `3px solid ${colorBorde}`, paddingLeft: '6px',
+            }}>
+                {label}
+            </p>
+            <p style={{
+                fontSize: '10px', color: '#222', lineHeight: '1.6',
+                background: '#f9f9f9', border: '1px solid #e0e0e0',
+                padding: '5px 10px', margin: 0,
+                borderLeft: `3px solid ${colorBorde}`,
+            }}>
+                {value}
+            </p>
+        </div>
+    )
+}
+
+// ─── Bloque de 2 firmas (Asesor Manual + Supervisor Digital) ────────────────
+const BloqueFirmas = ({ firmaSupervisor }) => (
+    <div style={{
+        marginTop: '10px', paddingTop: '8px',
+        borderTop: '1px solid #ddd',
+        display: 'grid', gridTemplateColumns: '1fr 1fr',
+        gap: '24px',
+    }}>
+        {/* FIRMA DEL ASESOR (MANUAL) */}
+        <div>
+            <div style={{ borderBottom: '1px solid #000', height: '36px', marginBottom: '3px' }} />
+            <span style={{
+                fontSize: '7px', color: '#666',
+                textTransform: 'uppercase', letterSpacing: '0.04em',
+            }}>
+                Firma del Asesor / Colaborador
+            </span>
+        </div>
+
+        {/* FIRMA DEL SUPERVISOR (DIGITAL) */}
+        <div>
+            {firmaSupervisor ? (
+                <>
+                    <img
+                        src={firmaSupervisor}
+                        alt="Firma Supervisor"
+                        style={{ maxHeight: '48px', mixBlendMode: 'multiply', display: 'block', marginBottom: '3px' }}
+                    />
+                    <span style={{
+                        fontSize: '7px', color: '#666',
+                        textTransform: 'uppercase', letterSpacing: '0.04em',
+                    }}>
+                        Firma del Supervisor (Digital)
+                    </span>
+                </>
+            ) : (
+                <>
+                    <div style={{ borderBottom: '1px solid #000', height: '36px', marginBottom: '3px' }} />
+                    <span style={{
+                        fontSize: '7px', color: '#666',
+                        textTransform: 'uppercase', letterSpacing: '0.04em',
+                    }}>
+                        Firma del Supervisor
+                    </span>
+                </>
+            )}
+        </div>
+    </div>
+)
+
+// ─── Mapa de etiquetas amigables ─────────────────────────────────────────────
+const LABEL_MAP = {
+    fechaMonitoreo: 'Fecha de Monitoreo',
+    herramientaUtilizada: 'Herramienta Utilizada',
+    hallazgosIdentificados: 'Hallazgos Identificados',
+    retroalimentacion: 'Retroalimentación',
+    observacionesSistemas: 'Observaciones de Sistemas',
+    fechaEvaluacion: 'Fecha de Evaluación',
+    tipoEvaluacion: 'Tipo de Evaluación',
+    calificacion: 'Calificación',
+    areasEvaluadas: 'Áreas Evaluadas',
+    resultados: 'Resultados',
+    fechaEstratificado: 'Fecha de Estratificado',
+    nivelDesempeno: 'Nivel de Desempeño',
+    analisisResultados: 'Análisis de Resultados',
+    buenasPracticas: 'Buenas Prácticas',
+    malasPracticas: 'Malas Prácticas',
+    planMejora: 'Plan de Mejora',
+    comparacionSemana2: 'Comparación con Semana 2',
+    evolucionAsesor: 'Evolución del Asesor',
+    efectividadAcciones: 'Efectividad de Acciones',
+    fechaEscucha: 'Fecha de Escucha',
+    asesorBench: 'Asesor Bench',
+    criteriosReforzados: 'Criterios Reforzados',
+    buenasPracticasObservadas: 'Buenas Prácticas Observadas',
+    areasMejora: 'Áreas de Mejora',
+    retencionInformacion: 'Retención de Información',
+    aplicacionCorrecta: 'Aplicación Correcta',
+    observaciones: 'Observaciones',
+    fechaCapacitacion: 'Fecha de Capacitación',
+    eLearningCompletado: 'E-Learning Completado',
+    microCapsulas: 'Micro Cápsulas',
+    puntosDolorAbordados: 'Puntos de Dolor Abordados',
+    progresoObservado: 'Progreso Observado',
+    mejoraDesempeno: 'Mejora en Desempeño',
+    adherenciaProtocolos: 'Adherencia a Protocolos',
+    resolucionConsultas: 'Resolución de Consultas',
+    observacionesGenerales: 'Observaciones Generales',
+    fechaTaller: 'Fecha del Taller',
+    casosAnalizados: 'Casos Analizados',
+    buenasPracticasAplicadas: 'Buenas Prácticas Aplicadas',
+    oportunidadesMejora: 'Oportunidades de Mejora',
+    observacionesTaller: 'Observaciones del Taller',
+    fechaEstratificadoFinal: 'Fecha Estratificado Final',
+    nivelDesempenoFinal: 'Nivel de Desempeño Final',
+    analisisIntegral: 'Análisis Integral',
+    monitoreosCompletados: 'Monitoreos Completados',
+    evaluacionesCompletadas: 'Evaluaciones Completadas',
+    madurezOperativa: 'Madurez Operativa',
+    fechaEntrega: 'Fecha de Entrega',
+    resultadosFinales: 'Resultados Finales',
+    observacionesJefatura: 'Observaciones de Jefatura',
+    aprobacionPeriodo: 'Aprobación del Período',
+    recomendacionesFinales: 'Recomendaciones Finales',
+}
+
+const formatLabel = (key) =>
+    LABEL_MAP[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())
+
+// ─── Componente Principal ─────────────────────────────────────────────────────
 const ReporteImpresion = ({ mesesConfig }) => {
     const { evaluaciones, printConfig } = useEvaluacion()
     const { datosAsesor } = evaluaciones
 
     const tipoProceso = datosAsesor?.tipoProceso
     const printTipo = printConfig ? printConfig.tipo : tipoProceso
-    const isIngresos = printTipo !== 'partitura'
     const isPartitura = printTipo === 'partitura'
+    const isIngresos = !isPartitura
 
-    // Helper para formatear nombres de campos (e.g. "fechaMonitoreo" -> "Fecha Monitoreo")
-    const formatLabel = (key) => {
-        const result = key.replace(/([A-Z])/g, " $1")
-        return result.charAt(0).toUpperCase() + result.slice(1)
-    }
+    const hoy = new Date().toLocaleDateString('es-MX', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+    })
+
+    const tituloFormulario = isPartitura
+        ? 'BDI Reforzamiento Positivo — Oportunidad de Mejora'
+        : 'Expediente de Desempeño — Nuevos Ingresos'
+
+    const subtituloFormulario = isPartitura
+        ? 'Período de Apoyo Operativo (4 Semanas) · Llamada de Atención'
+        : 'Período de Adaptación y Certificación (90 Días · 12 Semanas)'
 
     return (
-        <div className="hidden print:block p-10 bg-white text-black min-h-screen printable-report font-sans">
-            {/* Encabezado del Reporte */}
-            <div className="border-b-4 border-black pb-6 mb-8 flex justify-between items-end">
-                <div>
-                    <h1 className="text-4xl font-black uppercase tracking-tighter">
-                        {isPartitura ? 'Reforzamiento Operativo' : 'Expediente de Desempeño'}
-                    </h1>
-                    <p className="text-xl font-bold text-gray-600">
-                        {isPartitura ? 'Periodo de Apoyo (4 Semanas)' : 'Periodo de Adaptación (90 Días)'}
-                    </p>
-                    {datosAsesor?.idExpediente && (
-                        <p className="text-sm font-bold text-gray-400 mt-2 uppercase tracking-widest bg-gray-100 inline-block px-2 py-1 rounded">
-                            {datosAsesor.idExpediente}
-                        </p>
-                    )}
-                </div>
-                <div className="text-right">
-                    <p className="text-3xl font-black text-blue-600">NETCOM</p>
-                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Certificación de Autonomía</p>
-                </div>
-            </div>
+        <div
+            className="hidden print:block"
+            style={{
+                fontFamily: "'Calibri', 'Arial', sans-serif",
+                background: '#fff',
+                color: '#000',
+                // Padding propio para compensar @page margin: 0
+                padding: '14mm 16mm 14mm 16mm',
+                fontSize: '11px',
+                lineHeight: '1.4',
+                WebkitPrintColorAdjust: 'exact',
+                printColorAdjust: 'exact',
+            }}
+        >
 
-            {/* Datos del Asesor */}
-            <div className="grid grid-cols-2 gap-8 mb-10 bg-gray-50 p-6 rounded-xl border border-gray-200">
-                <div className="space-y-2">
-                    <p className="text-[10px] font-bold uppercase text-gray-500 tracking-widest">Nombre del Asesor</p>
-                    <p className="text-xl font-bold">{datosAsesor?.nombre || 'N/A'}</p>
-                </div>
-                <div className="space-y-2">
-                    <p className="text-[10px] font-bold uppercase text-gray-500 tracking-widest">ID / Cédula</p>
-                    <p className="text-xl font-bold">{datosAsesor?.cedula || 'N/A'}</p>
-                </div>
-                <div className="space-y-2">
-                    <p className="text-[10px] font-bold uppercase text-gray-500 tracking-widest">Campaña</p>
-                    <p className="text-lg font-bold">{datosAsesor?.campania || 'N/A'}</p>
-                </div>
-                <div className="space-y-2">
-                    <p className="text-[10px] font-bold uppercase text-gray-500 tracking-widest">Supervisor</p>
-                    <p className="text-lg font-bold">{datosAsesor?.supervisor || 'N/A'}</p>
-                </div>
-            </div>
+            {/* ══════════════════════════════════════════════════
+                ENCABEZADO INSTITUCIONAL — PRRHH07.FO-07
+            ══════════════════════════════════════════════════ */}
+            <table style={{
+                width: '100%', borderCollapse: 'collapse',
+                border: '2px solid #000', tableLayout: 'fixed',
+            }}>
+                <tbody>
+                    <tr>
+                        {/* Logo de la empresa */}
+                        <td style={{
+                            width: '20%', border: '1px solid #000',
+                            padding: '6px 8px', verticalAlign: 'middle', textAlign: 'center',
+                        }}>
+                            <img
+                                src={logoImg}
+                                alt="Logo empresa"
+                                style={{
+                                    maxWidth: '100%', maxHeight: '52px',
+                                    objectFit: 'contain', display: 'block', margin: '0 auto',
+                                }}
+                            />
+                        </td>
 
-            {/* Ciclo de Evaluación */}
+                        {/* Título del formulario */}
+                        <td style={{
+                            border: '1px solid #000',
+                            padding: '8px 14px', verticalAlign: 'middle', textAlign: 'center',
+                        }}>
+                            <div style={{
+                                fontSize: '12px', fontWeight: '800',
+                                textTransform: 'uppercase', letterSpacing: '0.03em',
+                                lineHeight: '1.3', color: '#1a1a2e',
+                            }}>
+                                {tituloFormulario}
+                            </div>
+                            <div style={{ fontSize: '8px', color: '#555', marginTop: '4px', fontStyle: 'italic' }}>
+                                {subtituloFormulario}
+                            </div>
+                        </td>
+
+                        {/* Metadatos del documento */}
+                        <td style={{
+                            width: '21%', border: '1px solid #000',
+                            padding: '0', verticalAlign: 'top',
+                        }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', height: '100%' }}>
+                                <tbody>
+                                    {[
+                                        ['Código', 'PRRHH07.FO-07'],
+                                        ['Versión', 'v2.2'],
+                                        ['Fecha emisión', '07 / Mar / 2025'],
+                                        ['Fecha impresión', hoy],
+                                    ].map(([lbl, val]) => (
+                                        <tr key={lbl}>
+                                            <td style={{ border: '1px solid #ccc', padding: '3px 8px' }}>
+                                                <span style={{
+                                                    fontSize: '7px', fontWeight: '700',
+                                                    textTransform: 'uppercase', color: '#666', display: 'block',
+                                                }}>
+                                                    {lbl}
+                                                </span>
+                                                <span style={{ fontSize: '9px', fontWeight: '800', color: '#111' }}>
+                                                    {val}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            {/* ══════════════════════════════════════════════════
+                SECCIÓN I — DATOS DEL COLABORADOR
+            ══════════════════════════════════════════════════ */}
+            <table style={{
+                width: '100%', borderCollapse: 'collapse',
+                border: '1px solid #000', borderTop: 'none', marginBottom: '14px',
+            }}>
+                <thead>
+                    <tr>
+                        <th colSpan={4} style={{
+                            background: '#1a1a2e', color: '#fff',
+                            padding: '4px 10px', textAlign: 'left',
+                            fontSize: '8px', fontWeight: '700',
+                            textTransform: 'uppercase', letterSpacing: '0.1em',
+                        }}>
+                            Sección I — Datos del Colaborador
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <CampoTabla label="Nombre Completo del Colaborador" value={datosAsesor?.nombre} colSpan={2} />
+                        <CampoTabla label="ID / Cédula del Empleado" value={datosAsesor?.cedula} />
+                        <CampoTabla label="ID Expediente" value={datosAsesor?.idExpediente} />
+                    </tr>
+                    <tr>
+                        <CampoTabla label="Campaña / Área" value={datosAsesor?.campania} />
+                        <CampoTabla label="Supervisor Directo" value={datosAsesor?.supervisor} />
+                        <CampoTabla label="Fecha de Inicio" value={datosAsesor?.fechaInicio} />
+                        <CampoTabla
+                            label="Tipo de Proceso"
+                            value={isPartitura ? 'Reforzamiento Operativo (Partitura)' : 'Nuevos Ingresos (90 Días)'}
+                        />
+                    </tr>
+                </tbody>
+            </table>
+
+            {/* ══════════════════════════════════════════════════
+                SECCIÓN II — NUEVOS INGRESOS
+            ══════════════════════════════════════════════════ */}
             {isIngresos && Object.entries(mesesConfig).map(([mesKey, config]) => {
-                if (printConfig && printConfig.mes !== mesKey) return null;
-                
+                if (printConfig && printConfig.mes !== mesKey) return null
+
                 return (
-                <div key={mesKey} className="mb-12 break-inside-avoid">
-                    <h2 className="text-2xl font-black mb-6 pb-2 border-b-2 border-gray-200 uppercase">{config.titulo}</h2>
+                    <div key={mesKey} style={{ marginBottom: '18px', pageBreakInside: 'avoid' }}>
+                        <SeccionTitulo titulo={`Sección II — ${config.titulo}`} />
 
-                    <div className="space-y-8">
                         {config.semanas.map((semana) => {
-                            if (printConfig && printConfig.semana !== semana.id) return null;
-                            
-                            const data = evaluaciones[mesKey]?.[semana.id] || {}
-                            const keys = Object.keys(data).filter(k => k !== 'comentariosColaborador' && k !== 'firmaSemanal' && data[k])
+                            if (printConfig && printConfig.semana !== semana.id) return null
 
+                            const data = evaluaciones[mesKey]?.[semana.id] || {}
+                            const keys = Object.keys(data).filter(k =>
+                                k !== 'comentariosColaborador' && k !== 'firmaSemanal' && data[k]
+                            )
                             if (keys.length === 0 && !data.comentariosColaborador && !data.firmaSemanal) return null
 
                             return (
-                                <div key={semana.id} className="ml-4 border-l-2 border-gray-100 pl-6 mb-10 break-inside-avoid">
-                                    <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-                                        <span className="bg-black text-white px-2 py-0.5 text-xs rounded uppercase">{semana.titulo}</span>
-                                        <span className="text-gray-400 text-sm font-medium">— {semana.descripcion}</span>
-                                    </h3>
-
-                                    <div className="grid grid-cols-2 gap-x-12 gap-y-4 mb-4">
-                                        {keys.map(key => (
-                                            <div key={key}>
-                                                <p className="text-[9px] font-bold uppercase text-gray-400 mb-1">{formatLabel(key)}</p>
-                                                <p className="text-sm font-medium border-b border-gray-50 pb-1">{data[key]}</p>
-                                            </div>
-                                        ))}
+                                <div key={semana.id} style={{
+                                    border: '1px solid #ccc', marginBottom: '10px',
+                                    pageBreakInside: 'avoid',
+                                }}>
+                                    {/* Sub-encabezado semana */}
+                                    <div style={{
+                                        background: '#f0f0f0', borderBottom: '1px solid #ccc',
+                                        padding: '4px 10px',
+                                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                    }}>
+                                        <span style={{
+                                            fontSize: '9px', fontWeight: '800',
+                                            textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1a1a2e',
+                                        }}>
+                                            {semana.titulo}
+                                        </span>
+                                        <span style={{ fontSize: '8px', color: '#666', fontStyle: 'italic' }}>
+                                            {semana.descripcion}
+                                        </span>
                                     </div>
 
-                                    {data.comentariosColaborador && (
-                                        <div className="mt-4 p-4 bg-gray-50 rounded-lg italic">
-                                            <p className="text-[9px] font-bold uppercase text-gray-400 mb-2">Comentarios del Colaborador</p>
-                                            <p className="text-sm text-gray-700">"{data.comentariosColaborador}"</p>
+                                    <div style={{ padding: '10px 12px' }}>
+                                        <div style={{
+                                            display: 'grid', gridTemplateColumns: '1fr 1fr',
+                                            gap: '5px 20px', marginBottom: '8px',
+                                        }}>
+                                            {keys.map(key => (
+                                                <FilaDetalle key={key} label={formatLabel(key)} value={data[key]} />
+                                            ))}
                                         </div>
-                                    )}
 
-                                    {data.firmaSemanal && (
-                                        <div className="mt-4 flex flex-col items-start border-t border-gray-100 pt-4">
-                                            <p className="text-[9px] font-bold uppercase text-gray-400 mb-2">Conformidad Opcional (Semana)</p>
-                                            <img src={data.firmaSemanal} alt="Firma semanal" className="max-h-16 mix-blend-multiply -ml-2" />
-                                        </div>
-                                    )}
-                                </div>
-                            )
-                        })}
-                    </div>
-                </div>
-            )})}
-
-            {/* Partitura (Bitácora de Reforzamiento Operativo) */}
-            {isPartitura && evaluaciones.partitura && Object.entries(evaluaciones.partitura).some(([, data]) => Object.values(data || {}).filter(v => v).length > 0) && (
-                <div className="mb-12 break-inside-avoid page-break-before-always">
-                    <h2 className="text-2xl font-black mb-6 pb-2 border-b-2 border-gray-200 uppercase">
-                        Reforzamiento Positivo / Oportunidad de Mejora (Partitura)
-                    </h2>
-
-                    <div className="space-y-12">
-                        {['semana1', 'semana2', 'semana3', 'semana4'].map((semana) => {
-                            if (printConfig && printConfig.semana !== semana) return null;
-                            
-                            const data = evaluaciones.partitura?.[semana] || {}
-                            const hasData = Object.values(data).filter(v => v).length > 0
-                            if (!hasData) return null
-
-                            return (
-                                <div key={semana} className="border-2 border-gray-200 rounded-xl p-6 break-inside-avoid">
-                                    <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
-                                        <h3 className="text-xl font-black uppercase text-blue-900 tracking-tight">
-                                            {semana.replace('semana', 'Semana ')}
-                                        </h3>
-                                        <div className="text-right">
-                                            <p className="text-[10px] font-bold uppercase text-gray-500 tracking-widest">Periodo</p>
-                                            <p className="text-sm font-medium">{data.fechaInicio || '--'} al {data.fechaFin || '--'}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-x-12 gap-y-6 mb-8">
-                                        <div className="space-y-4">
-                                            <h4 className="text-xs font-bold uppercase bg-gray-100 p-2 rounded text-gray-700 tracking-wider">Métricas</h4>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <p className="text-[9px] font-bold uppercase text-gray-400 mb-1">Meta AHT / Resultado</p>
-                                                    <p className="text-sm font-medium border-b border-gray-50 pb-1">{data.metaAHT || '--'} / {data.resultadoAHT || '--'}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-[9px] font-bold uppercase text-gray-400 mb-1">Meta Calidad / Resultado</p>
-                                                    <p className="text-sm font-medium border-b border-gray-50 pb-1">{data.metaCalidad || '--'} / {data.resultadoCalidad || '--'}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="space-y-4">
-                                            <h4 className="text-xs font-bold uppercase bg-gray-100 p-2 rounded text-gray-700 tracking-wider">Monitoreos</h4>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <p className="text-[9px] font-bold uppercase text-gray-400 mb-1">ID NQC / Llamada</p>
-                                                    <p className="text-sm font-medium border-b border-gray-50 pb-1">{data.idNQC || '--'} / {data.idLlamada || '--'}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-6 mb-8">
-                                        {(data.hallazgos || data.retroalimentacion) && (
-                                            <div className="grid grid-cols-2 gap-8">
-                                                {data.hallazgos && (
-                                                    <div>
-                                                        <p className="text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-2 border-l-4 border-red-400 pl-2">Hallazgos</p>
-                                                        <p className="text-sm text-gray-800 bg-red-50 p-3 rounded-r-lg">{data.hallazgos}</p>
-                                                    </div>
-                                                )}
-                                                {data.retroalimentacion && (
-                                                    <div>
-                                                        <p className="text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-2 border-l-4 border-green-400 pl-2">Retroalimentación</p>
-                                                        <p className="text-sm text-gray-800 bg-green-50 p-3 rounded-r-lg">{data.retroalimentacion}</p>
-                                                    </div>
-                                                )}
-                                            </div>
+                                        {data.comentariosColaborador && (
+                                            <BloqueTexto
+                                                label="Comentarios del Colaborador"
+                                                value={`"${data.comentariosColaborador}"`}
+                                                colorBorde="#888"
+                                            />
                                         )}
 
-                                        {(data.temaCoaching || data.observacionesCoaching) && (
-                                            <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 mt-2">
-                                                <h4 className="text-xs font-bold uppercase text-blue-800 tracking-wider mb-4 flex items-center gap-2">
-                                                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                                                    Sesión de Coaching
-                                                </h4>
-                                                <div className="grid grid-cols-1 gap-4">
-                                                    {data.temaCoaching && (
-                                                        <div>
-                                                            <p className="text-[9px] font-bold uppercase text-blue-400 mb-1">Tema</p>
-                                                            <p className="text-sm font-medium text-blue-900 border-b border-blue-100 pb-1">{data.temaCoaching}</p>
-                                                        </div>
-                                                    )}
-                                                    {data.observacionesCoaching && (
-                                                        <div>
-                                                            <p className="text-[9px] font-bold uppercase text-blue-400 mb-1">Observaciones</p>
-                                                            <p className="text-sm text-blue-800 italic">{data.observacionesCoaching}</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {(data.causaRaiz || data.compromisos) && (
-                                            <div className="grid grid-cols-2 gap-8 mt-6">
-                                                {data.causaRaiz && (
-                                                    <div>
-                                                        <p className="text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-2 border-l-4 border-orange-400 pl-2">Causa Raíz</p>
-                                                        <p className="text-sm text-gray-800 bg-orange-50 p-3 rounded-r-lg">{data.causaRaiz}</p>
-                                                    </div>
-                                                )}
-                                                {data.compromisos && (
-                                                    <div>
-                                                        <p className="text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-2 border-l-4 border-[#ff004f] pl-2">Compromisos Adquiridos</p>
-                                                        <p className="text-sm text-gray-800 bg-[#ff004f]/5 p-3 rounded-r-lg">{data.compromisos}</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="mt-6 border-t border-gray-100 pt-6 flex justify-between items-center bg-gray-50 -mx-6 -mb-6 p-6 rounded-b-xl">
-                                        <div className="text-xs font-bold uppercase text-gray-400">
-                                            Conformidad del Asesor
-                                        </div>
-                                        <div className="flex flex-col items-center justify-center w-64 h-24 border-2 border-dashed border-gray-200 rounded-lg bg-white relative">
-                                            {data.firmaSemanal ? (
-                                                <img src={data.firmaSemanal} alt="Firma Semanal Partitura" className="max-h-20 mix-blend-multiply absolute inset-0 m-auto" />
-                                            ) : (
-                                                <p className="text-[10px] font-bold uppercase tracking-widest italic text-gray-300">Firma Física</p>
-                                            )}
-                                        </div>
+                                        <BloqueFirmas firmaSupervisor={data.firmaSemanal} />
                                     </div>
                                 </div>
                             )
                         })}
                     </div>
+                )
+            })}
+
+            {/* ══════════════════════════════════════════════════
+                SECCIÓN II — PARTITURA
+            ══════════════════════════════════════════════════ */}
+            {isPartitura && evaluaciones.partitura && (
+                <div style={{ marginBottom: '18px' }}>
+                    <SeccionTitulo
+                        titulo="Sección II — Bitácora de Reforzamiento Positivo / Oportunidad de Mejora"
+                        subtitulo="Período de Apoyo Operativo — 4 Semanas"
+                    />
+
+                    {['semana1', 'semana2', 'semana3', 'semana4'].map((semana) => {
+                        if (printConfig && printConfig.semana !== semana) return null
+
+                        const data = evaluaciones.partitura?.[semana] || {}
+                        const hasData = Object.values(data).some(v => v && v !== '')
+                        if (!hasData) return null
+
+                        const numSemana = semana.replace('semana', 'Semana ')
+
+                        return (
+                            <div key={semana} style={{
+                                border: '1px solid #000', marginBottom: '14px',
+                                pageBreakInside: 'avoid',
+                            }}>
+                                {/* Encabezado semana Partitura */}
+                                <div style={{
+                                    background: '#1a1a2e', color: '#fff',
+                                    padding: '5px 12px',
+                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                }}>
+                                    <span style={{
+                                        fontSize: '9px', fontWeight: '800',
+                                        textTransform: 'uppercase', letterSpacing: '0.1em',
+                                    }}>
+                                        {numSemana} — Reforzamiento Operativo
+                                    </span>
+                                    {(data.fechaInicio || data.fechaFin) && (
+                                        <span style={{ fontSize: '8px', opacity: 0.85 }}>
+                                            Período: {data.fechaInicio || '—'} al {data.fechaFin || '—'}
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div style={{ padding: '10px 12px' }}>
+                                    {/* Tabla de métricas */}
+                                    <table style={{
+                                        width: '100%', borderCollapse: 'collapse',
+                                        marginBottom: '10px', border: '1px solid #ddd',
+                                    }}>
+                                        <thead>
+                                            <tr style={{ background: '#f5f5f5' }}>
+                                                {['Meta AHT', 'Resultado AHT', 'Meta Calidad', 'Resultado Calidad', 'ID NQC', 'ID Llamada'].map(h => (
+                                                    <th key={h} style={{
+                                                        border: '1px solid #ddd', padding: '3px 6px',
+                                                        fontSize: '7px', fontWeight: '700',
+                                                        textTransform: 'uppercase', color: '#555',
+                                                        letterSpacing: '0.04em', textAlign: 'center',
+                                                    }}>
+                                                        {h}
+                                                    </th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                {[data.metaAHT, data.resultadoAHT, data.metaCalidad, data.resultadoCalidad, data.idNQC, data.idLlamada].map((val, i) => (
+                                                    <td key={i} style={{
+                                                        border: '1px solid #ddd', padding: '4px 6px',
+                                                        fontSize: '10px', fontWeight: '700',
+                                                        textAlign: 'center', color: '#111',
+                                                    }}>
+                                                        {val || '—'}
+                                                    </td>
+                                                ))}
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                    {/* Hallazgos y Retroalimentación */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '8px' }}>
+                                        <BloqueTexto label="Hallazgos del Monitoreo" value={data.hallazgos} colorBorde="#c0392b" />
+                                        <BloqueTexto label="Retroalimentación Otorgada" value={data.retroalimentacion} colorBorde="#27ae60" />
+                                    </div>
+
+                                    {/* Coaching */}
+                                    {(data.temaCoaching || data.observacionesCoaching) && (
+                                        <div style={{
+                                            border: '1px solid #bcd', background: '#f4f8ff',
+                                            padding: '7px 10px', marginBottom: '8px',
+                                        }}>
+                                            <p style={{
+                                                fontSize: '7px', fontWeight: '800',
+                                                textTransform: 'uppercase', color: '#2c6fad',
+                                                letterSpacing: '0.08em', margin: '0 0 5px 0',
+                                            }}>
+                                                ▸ Sesión de Coaching
+                                            </p>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                                                <FilaDetalle label="Tema" value={data.temaCoaching} />
+                                                <FilaDetalle label="Observaciones" value={data.observacionesCoaching} />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Causa Raíz y Compromisos */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '8px' }}>
+                                        <BloqueTexto label="Causa Raíz Identificada" value={data.causaRaiz} colorBorde="#e67e22" />
+                                        <BloqueTexto label="Compromisos Adquiridos" value={data.compromisos} colorBorde="#8e44ad" />
+                                    </div>
+
+                                    {/* Firmas: Asesor + Supervisor únicamente */}
+                                    <BloqueFirmas firmaSupervisor={data.firmaSemanal} />
+                                </div>
+                            </div>
+                        )
+                    })}
                 </div>
             )}
 
-            {/* --- PIE DE PÁGINA CON CÓDIGO QR --- */}
-            <div className="mt-16 pt-6 border-t-2 border-gray-300 flex justify-between items-end">
-                <div>
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400">PRRHH07.FO-07 | Documento generado digitalmente</p>
-                    <p className="text-[9px] text-gray-400 mt-0.5">Este documento es válido únicamente con firma digital del supervisor y del asesor evaluado.</p>
+            {/* ══════════════════════════════════════════════════
+                PIE DE PÁGINA — QR + METADATOS
+            ══════════════════════════════════════════════════ */}
+            <div style={{
+                borderTop: '2px solid #1a1a2e',
+                marginTop: '14px', paddingTop: '9px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
+            }}>
+                <div style={{ flex: 1 }}>
+                    <p style={{
+                        fontSize: '7px', fontWeight: '700', color: '#333',
+                        textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px 0',
+                    }}>
+                        PRRHH07.FO-07 · v2.2 · Documento generado digitalmente — Sistema EDA
+                    </p>
+                    <p style={{ fontSize: '7px', color: '#888', margin: 0 }}>
+                        Válido únicamente con firma del supervisor y del asesor evaluado.
+                    </p>
                 </div>
-                <div className="flex flex-col items-center gap-2">
+
+                <div style={{
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', gap: '3px', marginLeft: '14px',
+                }}>
                     <QRCodeSVG
-                        value={`[EDA] ID:${datosAsesor?.idExpediente || 'N/A'} | Asesor:${datosAsesor?.nombre || 'N/A'} | Campaña:${datosAsesor?.campania || 'N/A'} | Proceso:${tipoProceso || 'N/A'}`}
-                        size={72}
+                        value={`[PRRHH07.FO-07] ID:${datosAsesor?.idExpediente || 'N/A'} | ${datosAsesor?.nombre || 'N/A'} | ${datosAsesor?.campania || 'N/A'} | ${tipoProceso === 'partitura' ? 'Partitura' : 'Nuevos Ingresos'} | ${hoy}`}
+                        size={64}
                         level="M"
                         bgColor="#ffffff"
-                        fgColor="#000000"
+                        fgColor="#1a1a2e"
                     />
-                    <p className="text-[8px] font-bold uppercase tracking-widest text-gray-400">Scan para verificar</p>
+                    <p style={{
+                        fontSize: '6px', color: '#999',
+                        textTransform: 'uppercase', letterSpacing: '0.06em',
+                        margin: 0, textAlign: 'center',
+                    }}>
+                        Verificar documento
+                    </p>
                 </div>
             </div>
+
         </div>
     )
 }
 
 export default ReporteImpresion
-

@@ -108,8 +108,9 @@
 /* Estilos de impresión para PDF */
 @media print {
   @page {
-    margin: 10mm;
-    size: portrait;
+    /* Márgenes a 0 eliminan el encabezado/pie del navegador (fecha, título, URL) */
+    margin: 0;
+    size: A4 portrait;
   }
 
   .no-print, aside, header, nav, button, [role="tablist"], .tabs-list, .interactive-view {
